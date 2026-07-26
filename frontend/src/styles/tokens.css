@@ -1,0 +1,59 @@
+:root {
+  /* Core palette */
+  --bone-000: #fff8e7;
+  --bone-100: #f1e6cc;
+  --ink-950: #241126;
+  --ink-800: #45213f;
+  --acid-500: #c9ff2f;
+  --ember-500: #ff5b35;
+  --violet-600: #5e3bff;
+  --petrol-600: #006f68;
+  --rose-500: #ff4fa3;
+  --sand-400: #d5b77a;
+  --void-1000: #100811;
+
+  /* Semantic tokens */
+  --surface-canvas: var(--bone-000);
+  --surface-raised: var(--bone-100);
+  --surface-dark: var(--ink-950);
+  --surface-void: var(--void-1000);
+  --text-primary: var(--ink-950);
+  --text-muted: var(--ink-800);
+  --text-on-dark: var(--bone-000);
+  --text-on-acid: var(--ink-950);
+  --signal-action: var(--acid-500);
+  --signal-warning: var(--ember-500);
+  --signal-evidence: var(--violet-600);
+  --signal-settled: var(--petrol-600);
+  --signal-human: var(--rose-500);
+  --signal-neutral: var(--sand-400);
+
+  /* Typography */
+  --font-display: 'Archivo Black', 'Impact', sans-serif;
+  --font-body: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Borders */
+  --border-ink: 2px solid var(--ink-950);
+  --border-thin: 1px solid var(--ink-800);
+
+  /* Motion */
+  --timing-micro: 150ms;
+  --timing-panel: 300ms;
+  --timing-seal: 750ms;
+  --easing-snap: cubic-bezier(0.16, 1, 0.3, 1);
+  --easing-tension: cubic-bezier(0.37, 0, 0.63, 1);
+}
