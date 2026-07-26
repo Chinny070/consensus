@@ -119,6 +119,14 @@ The UI distinguishes all states. Only finalized transactions are permanent.
 - State changes occur before value transfers
 - Three outcomes: SATISFIED, NOT_SATISFIED, INCONCLUSIVE — never forced certainty
 
+## Live Deployment
+
+| | |
+|---|---|
+| **Frontend** | [consensus-chinny070s-projects.vercel.app](https://consensus-4shm1fmn1-chinny070s-projects.vercel.app) |
+| **Contract** | `0x3A52145CD664E2f2e754e70C676E47Cbecc6597B` on StudioNet |
+| **GitHub** | [github.com/Chinny070/consensus](https://github.com/Chinny070/consensus) |
+
 ## Known Limitations
 
 - StudioNet demo only — not production
