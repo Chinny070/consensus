@@ -28,7 +28,7 @@ export async function readAgreement(agreementId: number): Promise<Agreement> {
   return (await client.readContract({
     address: getContractAddress(),
     functionName: "get_agreement",
-    args: [agreementId],
+    args: [String(agreementId)],
   })) as unknown as Agreement;
 }
 
@@ -39,7 +39,7 @@ export async function readStatus(
   return (await client.readContract({
     address: getContractAddress(),
     functionName: "get_status",
-    args: [agreementId],
+    args: [String(agreementId)],
   })) as unknown as { status: number; status_label: string };
 }
 
@@ -62,7 +62,7 @@ export async function readClaimable(
   return (await client.readContract({
     address: getContractAddress(),
     functionName: "get_claimable",
-    args: [agreementId, address],
+    args: [String(agreementId), address],
   })) as unknown as ClaimableInfo;
 }
 
@@ -84,7 +84,7 @@ export async function readCriteria(
   return (await client.readContract({
     address: getContractAddress(),
     functionName: "get_criteria",
-    args: [agreementId],
+    args: [String(agreementId)],
   })) as unknown as CriterionData[];
 }
 
@@ -95,7 +95,7 @@ export async function readSubmission(
   return (await client.readContract({
     address: getContractAddress(),
     functionName: "get_submission",
-    args: [agreementId],
+    args: [String(agreementId)],
   })) as unknown as SubmissionData;
 }
 
@@ -106,7 +106,7 @@ export async function readVerdict(agreementId: number): Promise<VerdictData> {
   return (await client.readContract({
     address: getContractAddress(),
     functionName: "get_verdict",
-    args: [agreementId],
+    args: [String(agreementId)],
   })) as unknown as VerdictData;
 }
 
@@ -134,11 +134,11 @@ export async function writeCreateAgreement(
       args.fulfillerAddress,
       args.title,
       args.brief,
-      args.acceptBy,
-      args.deliverBy,
+      String(args.acceptBy),
+      String(args.deliverBy),
       args.evidencePolicy,
       args.criteriaJson,
-      args.passThresholdBps,
+      String(args.passThresholdBps),
     ],
     value: valueWei,
   })) as string;
@@ -152,7 +152,7 @@ export async function writeAcceptAgreement(
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "accept_agreement",
-    args: [agreementId],
+    args: [String(agreementId)],
     value: BigInt(0),
   })) as string;
 }
@@ -165,7 +165,7 @@ export async function writeCancelAgreement(
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "cancel_agreement",
-    args: [agreementId],
+    args: [String(agreementId)],
     value: BigInt(0),
   })) as string;
 }
@@ -183,7 +183,7 @@ export async function writeSubmitEvidence(
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "submit_evidence",
-    args: [agreementId, summary, evidenceManifest, contentHash],
+    args: [String(agreementId), summary, evidenceManifest, contentHash],
     value: BigInt(0),
   })) as string;
 }
@@ -198,7 +198,7 @@ export async function writeApproveDirectly(
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "approve_directly",
-    args: [agreementId],
+    args: [String(agreementId)],
     value: BigInt(0),
   })) as string;
 }
@@ -211,7 +211,7 @@ export async function writeRequestAdjudication(
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "request_adjudication",
-    args: [agreementId],
+    args: [String(agreementId)],
     value: BigInt(0),
   })) as string;
 }
@@ -224,7 +224,7 @@ export async function writeClaimFulfillerPayout(
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "claim_fulfiller_payout",
-    args: [agreementId],
+    args: [String(agreementId)],
     value: BigInt(0),
   })) as string;
 }
@@ -237,7 +237,7 @@ export async function writeClaimCreatorRefund(
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "claim_creator_refund",
-    args: [agreementId],
+    args: [String(agreementId)],
     value: BigInt(0),
   })) as string;
 }
@@ -250,7 +250,7 @@ export async function writeExpireAgreement(
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "expire_agreement",
-    args: [agreementId],
+    args: [String(agreementId)],
     value: BigInt(0),
   })) as string;
 }
