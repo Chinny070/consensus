@@ -6,7 +6,6 @@ from tests.direct.conftest import to_hex, make_criteria_json, SAMPLE_EVIDENCE_MA
 def test_create_agreement(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1_500_000
 
     result = contract.create_agreement(
         "",  # open fulfiller
@@ -17,6 +16,7 @@ def test_create_agreement(direct_vm, direct_deploy, direct_alice):
         "Submit public evidence URLs",
         make_criteria_json(),
         8000,  # pass_threshold_bps
+        1_500_000,  # amount_wei
     )
 
     assert result == 1
@@ -33,42 +33,38 @@ def test_create_agreement(direct_vm, direct_deploy, direct_alice):
 def test_create_rejects_zero_value(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 0
 
     with direct_vm.expect_revert("EXPECTED: escrow amount must be > 0"):
         contract.create_agreement(
             "", "Title", "Brief description", 1000000, 2000000, "Policy",
-            make_criteria_json(), 8000,
+            make_criteria_json(), 8000, 0,
         )
 
 
 def test_create_rejects_invalid_deadlines(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
 
     with direct_vm.expect_revert("EXPECTED: deliver_by must be after accept_by"):
         contract.create_agreement(
             "", "Title", "Brief description", 2000000, 1000000, "Policy",
-            make_criteria_json(), 8000,
+            make_criteria_json(), 8000, 1000,
         )
 
 
 def test_create_rejects_zero_criteria(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
 
     with direct_vm.expect_revert("EXPECTED: need 1-8 criteria"):
         contract.create_agreement(
-            "", "Title", "Brief description", 1000000, 2000000, "Policy", "[]", 8000,
+            "", "Title", "Brief description", 1000000, 2000000, "Policy", "[]", 8000, 1000,
         )
 
 
 def test_create_rejects_too_many_criteria(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
 
     criteria = []
     for i in range(9):
@@ -84,14 +80,13 @@ def test_create_rejects_too_many_criteria(direct_vm, direct_deploy, direct_alice
     with direct_vm.expect_revert("EXPECTED: need 1-8 criteria"):
         contract.create_agreement(
             "", "Title", "Brief description", 1000000, 2000000, "Policy",
-            make_criteria_json(criteria), 8000,
+            make_criteria_json(criteria), 8000, 1000,
         )
 
 
 def test_create_rejects_bad_weight_sum(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
 
     criteria = [{
         "label": "Only criterion",
@@ -105,18 +100,17 @@ def test_create_rejects_bad_weight_sum(direct_vm, direct_deploy, direct_alice):
     with direct_vm.expect_revert("EXPECTED: weights must sum to 10000"):
         contract.create_agreement(
             "", "Title", "Brief description", 1000000, 2000000, "Policy",
-            make_criteria_json(criteria), 8000,
+            make_criteria_json(criteria), 8000, 1000,
         )
 
 
 def test_accept_agreement(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
 
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
 
     direct_vm.sender = direct_bob
@@ -130,11 +124,10 @@ def test_accept_agreement(direct_vm, direct_deploy, direct_alice, direct_bob):
 def test_accept_rejects_creator(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
 
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
 
     with direct_vm.expect_revert("EXPECTED: creator cannot accept own agreement"):
@@ -146,10 +139,9 @@ def test_accept_specific_fulfiller(direct_vm, direct_deploy, direct_alice, direc
     bob_hex = to_hex(direct_bob)
 
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
     contract.create_agreement(
         bob_hex, "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
 
     direct_vm.sender = direct_bob
@@ -161,10 +153,9 @@ def test_accept_specific_fulfiller(direct_vm, direct_deploy, direct_alice, direc
 def test_submit_evidence(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
 
     direct_vm.sender = direct_bob
@@ -184,10 +175,9 @@ def test_submit_evidence(direct_vm, direct_deploy, direct_alice, direct_bob):
 def test_approve_directly(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
 
     direct_vm.sender = direct_bob
@@ -204,10 +194,9 @@ def test_approve_directly(direct_vm, direct_deploy, direct_alice, direct_bob):
 def test_cancel_agreement(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
 
     contract.cancel_agreement(1)
@@ -218,10 +207,9 @@ def test_cancel_agreement(direct_vm, direct_deploy, direct_alice):
 def test_terminal_state_rejects_mutations(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
     contract.cancel_agreement(1)
 
@@ -233,10 +221,9 @@ def test_terminal_state_rejects_mutations(direct_vm, direct_deploy, direct_alice
 def test_criteria_view(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
 
     criteria = contract.get_criteria(1)
@@ -251,10 +238,9 @@ def test_criteria_view(direct_vm, direct_deploy, direct_alice):
 def test_agreement_ids_for_address(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000,
+        make_criteria_json(), 8000, 1000,
     )
 
     direct_vm.sender = direct_bob
@@ -270,10 +256,9 @@ def test_agreement_ids_for_address(direct_vm, direct_deploy, direct_alice, direc
 def test_configurable_threshold(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
-    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 6000,
+        make_criteria_json(), 6000, 1000,
     )
 
     agreement = contract.get_agreement(1)

@@ -139,8 +139,9 @@ export async function writeCreateAgreement(
       args.evidencePolicy,
       args.criteriaJson,
       String(args.passThresholdBps),
+      String(valueWei),
     ],
-    value: valueWei,
+    value: BigInt(0),
   })) as string;
 }
 

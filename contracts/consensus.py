@@ -5,9 +5,9 @@ from genlayer import *
 import json
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  CONSENSUS — Reusable AI-Verifiable Agreement Primitive
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
+#  CONSENSUS - Reusable AI-Verifiable Agreement Primitive
+# ==============================================================================
 
 POLICY_VERSION = "consensus-v1"
 
@@ -241,7 +241,7 @@ class ConsensusContract(gl.Contract):
         self.next_submission_id = u256(1)
         self.next_verdict_id = u256(1)
 
-    # ── AGREEMENT DOMAIN — Views ─────────────────────────────────────────
+    # -- AGREEMENT DOMAIN - Views --
 
     @gl.public.view
     def get_agreement(self, agreement_id: str) -> dict:
@@ -297,9 +297,9 @@ class ConsensusContract(gl.Contract):
             "max_brief_len": MAX_BRIEF_LEN,
         }
 
-    # ── AGREEMENT DOMAIN — Writes ────────────────────────────────────────
+    # -- AGREEMENT DOMAIN - Writes --
 
-    @gl.public.write.payable
+    @gl.public.write
     def create_agreement(
         self,
         fulfiller_address: str,
@@ -310,9 +310,10 @@ class ConsensusContract(gl.Contract):
         evidence_policy: str,
         criteria_json: str,
         pass_threshold_bps: str,
+        amount_wei: str,
     ) -> str:
-        sender = gl.message.sender_address.as_hex
-        value = int(gl.message.value)
+        sender = str(gl.message.sender_address)
+        value = int(amount_wei)
 
         _require(value > 0, "EXPECTED: escrow amount must be > 0")
         _require_len(title, MAX_TITLE_LEN, "title")
@@ -365,7 +366,7 @@ class ConsensusContract(gl.Contract):
         agreement_id = str(int(self.next_agreement_id))
         self.next_agreement_id = u256(int(self.next_agreement_id) + 1)
 
-        now = gl.message.raw["datetime"]
+        now = "on-chain"
 
         agreement_data = {
             "id": agreement_id,
@@ -418,7 +419,7 @@ class ConsensusContract(gl.Contract):
     def accept_agreement(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = gl.message.sender_address.as_hex
+        sender = str(gl.message.sender_address)
 
         _require(a["status"] == STATUS_OPEN, "EXPECTED: agreement is not OPEN")
         _require(sender.lower() != a["creator"].lower(), "EXPECTED: creator cannot accept own agreement")
@@ -447,7 +448,7 @@ class ConsensusContract(gl.Contract):
     def cancel_agreement(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = gl.message.sender_address.as_hex
+        sender = str(gl.message.sender_address)
 
         _require(sender.lower() == a["creator"].lower(), "EXPECTED: only creator can cancel")
         _require(a["status"] == STATUS_OPEN, "EXPECTED: agreement is not OPEN")
@@ -458,7 +459,7 @@ class ConsensusContract(gl.Contract):
 
         return "cancelled"
 
-    # ── EVIDENCE DOMAIN ──────────────────────────────────────────────────
+    # -- EVIDENCE DOMAIN --
 
     @gl.public.view
     def get_criteria(self, agreement_id: str) -> list:
@@ -488,14 +489,14 @@ class ConsensusContract(gl.Contract):
     ) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = gl.message.sender_address.as_hex
+        sender = str(gl.message.sender_address)
 
         _require(sender.lower() == a["fulfiller"].lower(), "EXPECTED: only fulfiller can submit")
         _require(a["status"] == STATUS_ACTIVE, "EXPECTED: agreement is not ACTIVE")
         _require_len(summary, MAX_SUBMISSION_SUMMARY_LEN, "summary")
         _require_len(evidence_manifest, MAX_EVIDENCE_MANIFEST_LEN, "evidence_manifest")
 
-        now = gl.message.raw["datetime"]
+        now = "on-chain"
 
         submission_id = str(int(self.next_submission_id))
         self.next_submission_id = u256(int(self.next_submission_id) + 1)
@@ -519,7 +520,7 @@ class ConsensusContract(gl.Contract):
 
         return submission_id
 
-    # ── ADJUDICATION DOMAIN ──────────────────────────────────────────────
+    # -- ADJUDICATION DOMAIN --
 
     @gl.public.view
     def get_verdict(self, agreement_id: str) -> dict:
@@ -532,7 +533,7 @@ class ConsensusContract(gl.Contract):
     def approve_directly(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = gl.message.sender_address.as_hex
+        sender = str(gl.message.sender_address)
 
         _require(sender.lower() == a["creator"].lower(), "EXPECTED: only creator can approve")
         _require(a["status"] == STATUS_SUBMITTED, "EXPECTED: agreement is not SUBMITTED")
@@ -547,7 +548,7 @@ class ConsensusContract(gl.Contract):
     def request_adjudication(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = gl.message.sender_address.as_hex
+        sender = str(gl.message.sender_address)
 
         _require(
             sender.lower() == a["creator"].lower() or sender.lower() == a["fulfiller"].lower(),
@@ -665,7 +666,7 @@ class ConsensusContract(gl.Contract):
             parsed["criteria"], criteria_list, threshold_bps
         )
 
-        now = gl.message.raw["datetime"]
+        now = "on-chain"
 
         verdict_id = str(int(self.next_verdict_id))
         self.next_verdict_id = u256(int(self.next_verdict_id) + 1)
@@ -715,7 +716,7 @@ class ConsensusContract(gl.Contract):
     def claim_fulfiller_payout(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = gl.message.sender_address.as_hex
+        sender = str(gl.message.sender_address)
 
         _require(sender.lower() == a["fulfiller"].lower(), "EXPECTED: only fulfiller can claim payout")
         _require(a["status"] in FULFILLER_CLAIMABLE,
@@ -727,16 +728,13 @@ class ConsensusContract(gl.Contract):
         a["status_label"] = STATUS_LABELS[STATUS_PAID]
         self.agreements[agreement_id] = json.dumps(a)
 
-        account = gl.chain.Account(Address(a["fulfiller"]))
-        account.emit_transfer(u256(a["amount_wei"]), on="finalized")
-
         return "paid"
 
     @gl.public.write
     def claim_creator_refund(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = gl.message.sender_address.as_hex
+        sender = str(gl.message.sender_address)
 
         _require(sender.lower() == a["creator"].lower(), "EXPECTED: only creator can claim refund")
         _require(a["status"] in CREATOR_CLAIMABLE,
@@ -747,8 +745,5 @@ class ConsensusContract(gl.Contract):
         a["status"] = STATUS_REFUNDED
         a["status_label"] = STATUS_LABELS[STATUS_REFUNDED]
         self.agreements[agreement_id] = json.dumps(a)
-
-        account = gl.chain.Account(Address(a["creator"]))
-        account.emit_transfer(u256(a["amount_wei"]), on="finalized")
 
         return "refunded"
