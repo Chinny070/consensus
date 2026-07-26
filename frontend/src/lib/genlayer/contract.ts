@@ -127,20 +127,24 @@ export async function writeCreateAgreement(
   valueWei: bigint
 ): Promise<string> {
   const client = createWriteClient(account);
+  const callArgs = [
+    args.fulfillerAddress,
+    args.title,
+    args.brief,
+    String(args.acceptBy),
+    String(args.deliverBy),
+    args.evidencePolicy,
+    args.criteriaJson,
+    String(args.passThresholdBps),
+    String(valueWei),
+  ];
+  console.log("[Consensus] create_agreement args:", callArgs);
+  console.log("[Consensus] contract address:", getContractAddress());
+  console.log("[Consensus] account:", account);
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "create_agreement",
-    args: [
-      args.fulfillerAddress,
-      args.title,
-      args.brief,
-      String(args.acceptBy),
-      String(args.deliverBy),
-      args.evidencePolicy,
-      args.criteriaJson,
-      String(args.passThresholdBps),
-      String(valueWei),
-    ],
+    args: callArgs,
     value: BigInt(0),
   })) as string;
 }

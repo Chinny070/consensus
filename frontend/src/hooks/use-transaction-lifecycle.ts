@@ -18,7 +18,9 @@ export function useTransactionLifecycle() {
 
       try {
         setPhase("awaiting_signature");
+        console.log("[Consensus] Requesting wallet signature...");
         const hash = await writeFn();
+        console.log("[Consensus] Transaction hash:", hash);
 
         setTx((s) => ({
           ...s,
@@ -28,8 +30,10 @@ export function useTransactionLifecycle() {
         }));
 
         setPhase("pending");
+        console.log("[Consensus] Waiting for receipt...");
 
         const receipt = await waitForReceipt(hash, "ACCEPTED");
+        console.log("[Consensus] Receipt received:", receipt);
 
         setTx((s) => ({
           ...s,
@@ -40,6 +44,7 @@ export function useTransactionLifecycle() {
 
         return { hash, receipt };
       } catch (error: unknown) {
+        console.error("[Consensus] Transaction failed:", error);
         const message =
           error instanceof Error ? error.message : "Transaction failed";
         setTx((s) => ({
