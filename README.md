@@ -124,7 +124,7 @@ The UI distinguishes all states. Only finalized transactions are permanent.
 | | |
 |---|---|
 | **Frontend** | [consensus-chinny070s-projects.vercel.app](https://consensus-4shm1fmn1-chinny070s-projects.vercel.app) |
-| **Contract** | `0xe0861e1B8E6807EA4E8bd806677C0108f16D3dcc` on StudioNet |
+| **Contract** | `0xCB4e83Eff50F674a8a4156cd7BF47d92503E0fAD` on StudioNet |
 | **GitHub** | [github.com/Chinny070/consensus](https://github.com/Chinny070/consensus) |
 
 ## Known Limitations
