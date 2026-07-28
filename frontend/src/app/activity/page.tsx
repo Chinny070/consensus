@@ -24,7 +24,7 @@ export default function ActivityPage() {
     if (!address) return;
     setLoading(true);
     try {
-      const ids = await readAgreementIdsFor(address);
+      const ids = await readAgreementIdsFor(address.toLowerCase());
       const targetIds = tab === "client" ? ids.as_creator : ids.as_fulfiller;
       const loaded = await Promise.all(
         targetIds.map((id) => readAgreement(id))

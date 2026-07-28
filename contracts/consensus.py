@@ -271,12 +271,13 @@ class ConsensusContract(gl.Contract):
 
     @gl.public.view
     def get_agreement_ids_for(self, address: str) -> dict:
+        addr = address.lower()
         creator_ids = []
         fulfiller_ids = []
-        if address in self.creator_agreements:
-            creator_ids = json.loads(self.creator_agreements[address])
-        if address in self.fulfiller_agreements:
-            fulfiller_ids = json.loads(self.fulfiller_agreements[address])
+        if addr in self.creator_agreements:
+            creator_ids = json.loads(self.creator_agreements[addr])
+        if addr in self.fulfiller_agreements:
+            fulfiller_ids = json.loads(self.fulfiller_agreements[addr])
         return {"as_creator": creator_ids, "as_fulfiller": fulfiller_ids}
 
     @gl.public.view
@@ -287,11 +288,12 @@ class ConsensusContract(gl.Contract):
         amount = 0
         role = ""
 
-        if address == a["fulfiller"] and a["status"] in FULFILLER_CLAIMABLE and not a["fulfiller_claimed"]:
+        addr = address.lower()
+        if addr == a["fulfiller"] and a["status"] in FULFILLER_CLAIMABLE and not a["fulfiller_claimed"]:
             can_claim = True
             amount = a["amount_wei"]
             role = "fulfiller"
-        elif address == a["creator"] and a["status"] in CREATOR_CLAIMABLE and not a["creator_claimed"]:
+        elif addr == a["creator"] and a["status"] in CREATOR_CLAIMABLE and not a["creator_claimed"]:
             can_claim = True
             amount = a["amount_wei"]
             role = "creator"
@@ -323,7 +325,7 @@ class ConsensusContract(gl.Contract):
         criteria_json: str,
         pass_threshold_bps: str,
     ) -> str:
-        sender = str(gl.message.sender_address)
+        sender = str(gl.message.sender_address).lower()
         value = int(gl.message.value)
 
         _require(value > 0, "EXPECTED: escrow amount must be > 0")
@@ -430,7 +432,7 @@ class ConsensusContract(gl.Contract):
     def accept_agreement(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = str(gl.message.sender_address)
+        sender = str(gl.message.sender_address).lower()
 
         _require(a["status"] == STATUS_OPEN, "EXPECTED: agreement is not OPEN")
         _require(sender.lower() != a["creator"].lower(), "EXPECTED: creator cannot accept own agreement")
@@ -459,7 +461,7 @@ class ConsensusContract(gl.Contract):
     def cancel_agreement(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = str(gl.message.sender_address)
+        sender = str(gl.message.sender_address).lower()
 
         _require(sender.lower() == a["creator"].lower(), "EXPECTED: only creator can cancel")
         _require(a["status"] == STATUS_OPEN, "EXPECTED: agreement is not OPEN")
@@ -500,7 +502,7 @@ class ConsensusContract(gl.Contract):
     ) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = str(gl.message.sender_address)
+        sender = str(gl.message.sender_address).lower()
 
         _require(sender.lower() == a["fulfiller"].lower(), "EXPECTED: only fulfiller can submit")
         _require(a["status"] == STATUS_ACTIVE, "EXPECTED: agreement is not ACTIVE")
@@ -544,7 +546,7 @@ class ConsensusContract(gl.Contract):
     def approve_directly(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = str(gl.message.sender_address)
+        sender = str(gl.message.sender_address).lower()
 
         _require(sender.lower() == a["creator"].lower(), "EXPECTED: only creator can approve")
         _require(a["status"] == STATUS_SUBMITTED, "EXPECTED: agreement is not SUBMITTED")
@@ -559,7 +561,7 @@ class ConsensusContract(gl.Contract):
     def request_adjudication(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = str(gl.message.sender_address)
+        sender = str(gl.message.sender_address).lower()
 
         _require(
             sender.lower() == a["creator"].lower() or sender.lower() == a["fulfiller"].lower(),
@@ -726,7 +728,7 @@ class ConsensusContract(gl.Contract):
     def claim_fulfiller_payout(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = str(gl.message.sender_address)
+        sender = str(gl.message.sender_address).lower()
 
         _require(sender.lower() == a["fulfiller"].lower(), "EXPECTED: only fulfiller can claim payout")
         _require(a["status"] in FULFILLER_CLAIMABLE,
@@ -747,7 +749,7 @@ class ConsensusContract(gl.Contract):
     def claim_creator_refund(self, agreement_id: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
-        sender = str(gl.message.sender_address)
+        sender = str(gl.message.sender_address).lower()
 
         _require(sender.lower() == a["creator"].lower(), "EXPECTED: only creator can claim refund")
         _require(a["status"] in CREATOR_CLAIMABLE,
