@@ -6,10 +6,11 @@ from tests.direct.conftest import make_criteria_json, SAMPLE_EVIDENCE_MANIFEST
 def test_correct_amount_recorded(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
+    direct_vm.value = 5_000_000
 
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000, 5_000_000,
+        make_criteria_json(), 8000,
     )
 
     agreement = contract.get_agreement(1)
@@ -19,9 +20,10 @@ def test_correct_amount_recorded(direct_vm, direct_deploy, direct_alice):
 def test_cancel_makes_refund_available(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
+    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000, 1000,
+        make_criteria_json(), 8000,
     )
 
     contract.cancel_agreement(1)
@@ -35,9 +37,10 @@ def test_cancel_makes_refund_available(direct_vm, direct_deploy, direct_alice):
 def test_approval_makes_fulfiller_claimable(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
+    direct_vm.value = 2000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000, 2000,
+        make_criteria_json(), 8000,
     )
 
     direct_vm.sender = direct_bob
@@ -56,9 +59,10 @@ def test_approval_makes_fulfiller_claimable(direct_vm, direct_deploy, direct_ali
 def test_wrong_claimant_rejected(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
+    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000, 1000,
+        make_criteria_json(), 8000,
     )
 
     contract.cancel_agreement(1)
@@ -71,9 +75,10 @@ def test_wrong_claimant_rejected(direct_vm, direct_deploy, direct_alice, direct_
 def test_no_double_claim(direct_vm, direct_deploy, direct_alice):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
+    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000, 1000,
+        make_criteria_json(), 8000,
     )
     contract.cancel_agreement(1)
     contract.claim_creator_refund(1)

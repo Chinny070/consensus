@@ -225,6 +225,18 @@ def _build_adjudication_prompt(agreement_data, criteria_list, submission_data):
     )
 
 
+def _fetch_evidence(evidence_urls):
+    context = ""
+    for url in evidence_urls[:8]:
+        if isinstance(url, str) and url.startswith("https://"):
+            try:
+                page_text = gl.nondet.web.render(url, mode="text")
+                context += "\n--- Evidence from " + url + " ---\n" + str(page_text)[:3000] + "\n"
+            except Exception:
+                context += "\n--- Evidence from " + url + " ---\nEXTERNAL: could not fetch\n"
+    return context
+
+
 class ConsensusContract(gl.Contract):
     agreements: TreeMap[str, str]
     criteria_store: TreeMap[str, str]
@@ -299,7 +311,7 @@ class ConsensusContract(gl.Contract):
 
     # -- AGREEMENT DOMAIN - Writes --
 
-    @gl.public.write
+    @gl.public.write.payable
     def create_agreement(
         self,
         fulfiller_address: str,
@@ -310,10 +322,9 @@ class ConsensusContract(gl.Contract):
         evidence_policy: str,
         criteria_json: str,
         pass_threshold_bps: str,
-        amount_wei: str,
     ) -> str:
         sender = str(gl.message.sender_address)
-        value = int(amount_wei)
+        value = int(gl.message.value)
 
         _require(value > 0, "EXPECTED: escrow amount must be > 0")
         _require_len(title, MAX_TITLE_LEN, "title")
@@ -366,7 +377,7 @@ class ConsensusContract(gl.Contract):
         agreement_id = str(int(self.next_agreement_id))
         self.next_agreement_id = u256(int(self.next_agreement_id) + 1)
 
-        now = "on-chain"
+        now = str(gl.message.raw["datetime"])
 
         agreement_data = {
             "id": agreement_id,
@@ -496,7 +507,7 @@ class ConsensusContract(gl.Contract):
         _require_len(summary, MAX_SUBMISSION_SUMMARY_LEN, "summary")
         _require_len(evidence_manifest, MAX_EVIDENCE_MANIFEST_LEN, "evidence_manifest")
 
-        now = "on-chain"
+        now = str(gl.message.raw["datetime"])
 
         submission_id = str(int(self.next_submission_id))
         self.next_submission_id = u256(int(self.next_submission_id) + 1)
@@ -582,22 +593,13 @@ class ConsensusContract(gl.Contract):
         except (json.JSONDecodeError, TypeError):
             pass
 
-        evidence_context = ""
-        for url in evidence_urls[:8]:
-            if isinstance(url, str) and url.startswith("https://"):
-                try:
-                    page_text = gl.nondet.web.render(url, mode="text")
-                    evidence_context += "\n--- Evidence from " + url + " ---\n" + str(page_text)[:3000] + "\n"
-                except Exception:
-                    evidence_context += "\n--- Evidence from " + url + " ---\nEXTERNAL: could not fetch\n"
-
-        full_prompt = prompt
-        if evidence_context:
-            full_prompt += "\n\nFETCHED EVIDENCE CONTENT:" + evidence_context
-
         threshold_bps = a["pass_threshold_bps"]
 
         def leader_fn():
+            evidence_context = _fetch_evidence(evidence_urls)
+            full_prompt = prompt
+            if evidence_context:
+                full_prompt += "\n\nFETCHED EVIDENCE CONTENT:" + evidence_context
             result = gl.nondet.exec_prompt(full_prompt, response_format="json")
             return json.dumps(result, sort_keys=True)
 
@@ -612,6 +614,11 @@ class ConsensusContract(gl.Contract):
 
             leader_parsed = _parse_verdict_json(json.dumps(leader_data), a["criteria_count"])
             leader_criteria = leader_parsed["criteria"]
+
+            evidence_context = _fetch_evidence(evidence_urls)
+            full_prompt = prompt
+            if evidence_context:
+                full_prompt += "\n\nFETCHED EVIDENCE CONTENT:" + evidence_context
 
             my_result_str = gl.nondet.exec_prompt(full_prompt, response_format="json")
             try:
@@ -666,7 +673,7 @@ class ConsensusContract(gl.Contract):
             parsed["criteria"], criteria_list, threshold_bps
         )
 
-        now = "on-chain"
+        now = str(gl.message.raw["datetime"])
 
         verdict_id = str(int(self.next_verdict_id))
         self.next_verdict_id = u256(int(self.next_verdict_id) + 1)
@@ -695,14 +702,17 @@ class ConsensusContract(gl.Contract):
         return verdict_id
 
     @gl.public.write
-    def expire_agreement(self, agreement_id: str) -> str:
+    def expire_agreement(self, agreement_id: str, current_timestamp: str) -> str:
         _require(agreement_id in self.agreements, "EXPECTED: agreement not found")
         a = json.loads(self.agreements[agreement_id])
+        now = int(current_timestamp)
 
         if a["status"] == STATUS_OPEN:
-            pass
+            _require(now > a["accept_by"],
+                     "EXPECTED: accept deadline has not passed yet")
         elif a["status"] == STATUS_ACTIVE:
-            pass
+            _require(now > a["deliver_by"],
+                     "EXPECTED: delivery deadline has not passed yet")
         else:
             raise gl.vm.UserError("EXPECTED: agreement cannot be expired in current state")
 
@@ -728,6 +738,9 @@ class ConsensusContract(gl.Contract):
         a["status_label"] = STATUS_LABELS[STATUS_PAID]
         self.agreements[agreement_id] = json.dumps(a)
 
+        account = gl.chain.Account(Address(a["fulfiller"]))
+        account.emit_transfer(u256(a["amount_wei"]), on="finalized")
+
         return "paid"
 
     @gl.public.write
@@ -745,5 +758,8 @@ class ConsensusContract(gl.Contract):
         a["status"] = STATUS_REFUNDED
         a["status_label"] = STATUS_LABELS[STATUS_REFUNDED]
         self.agreements[agreement_id] = json.dumps(a)
+
+        account = gl.chain.Account(Address(a["creator"]))
+        account.emit_transfer(u256(a["amount_wei"]), on="finalized")
 
         return "refunded"

@@ -5,9 +5,10 @@ from tests.direct.conftest import to_hex, make_criteria_json, SAMPLE_EVIDENCE_MA
 
 def _create_and_accept(contract, direct_vm, creator, fulfiller):
     direct_vm.sender = creator
+    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000, 1000,
+        make_criteria_json(), 8000,
     )
     direct_vm.sender = fulfiller
     contract.accept_agreement(1)
@@ -21,9 +22,10 @@ def _submit(contract, direct_vm, fulfiller):
 def test_cancel_rejects_non_creator(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/consensus.py")
     direct_vm.sender = direct_alice
+    direct_vm.value = 1000
     contract.create_agreement(
         "", "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000, 1000,
+        make_criteria_json(), 8000,
     )
 
     direct_vm.sender = direct_bob
@@ -73,9 +75,10 @@ def test_accept_rejects_wrong_specific_fulfiller(direct_vm, direct_deploy, direc
     contract = direct_deploy("contracts/consensus.py")
     bob_hex = to_hex(direct_bob)
     direct_vm.sender = direct_alice
+    direct_vm.value = 1000
     contract.create_agreement(
         bob_hex, "Title", "Brief description", 1000000, 2000000, "Policy",
-        make_criteria_json(), 8000, 1000,
+        make_criteria_json(), 8000,
     )
 
     direct_vm.sender = direct_charlie

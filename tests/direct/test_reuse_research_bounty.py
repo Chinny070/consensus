@@ -68,6 +68,7 @@ def test_research_bounty_full_lifecycle(direct_vm, direct_deploy, direct_alice, 
     contract = direct_deploy("contracts/consensus.py")
 
     direct_vm.sender = direct_alice
+    direct_vm.value = 3_000_000
 
     agreement_id = contract.create_agreement(
         "",
@@ -81,7 +82,6 @@ def test_research_bounty_full_lifecycle(direct_vm, direct_deploy, direct_alice, 
         "A PDF or Markdown document is acceptable.",
         json.dumps(RESEARCH_CRITERIA),
         7500,
-        3_000_000,
     )
 
     assert agreement_id == 1
@@ -144,6 +144,7 @@ def test_research_bounty_uses_custom_threshold(direct_vm, direct_deploy, direct_
     contract = direct_deploy("contracts/consensus.py")
 
     direct_vm.sender = direct_alice
+    direct_vm.value = 1_000_000
 
     contract.create_agreement(
         "",
@@ -154,7 +155,6 @@ def test_research_bounty_uses_custom_threshold(direct_vm, direct_deploy, direct_
         "Submit a public URL to the review.",
         json.dumps(RESEARCH_CRITERIA),
         7500,
-        1_000_000,
     )
 
     agreement = contract.get_agreement(1)

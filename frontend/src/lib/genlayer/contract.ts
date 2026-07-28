@@ -136,16 +136,16 @@ export async function writeCreateAgreement(
     args.evidencePolicy,
     args.criteriaJson,
     String(args.passThresholdBps),
-    String(valueWei),
   ];
   console.log("[Consensus] create_agreement args:", callArgs);
   console.log("[Consensus] contract address:", getContractAddress());
   console.log("[Consensus] account:", account);
+  console.log("[Consensus] value (wei):", valueWei.toString());
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "create_agreement",
     args: callArgs,
-    value: BigInt(0),
+    value: valueWei,
   })) as string;
 }
 
@@ -252,10 +252,11 @@ export async function writeExpireAgreement(
   agreementId: number
 ): Promise<string> {
   const client = createWriteClient(account);
+  const now = Math.floor(Date.now() / 1000);
   return (await client.writeContract({
     address: getContractAddress(),
     functionName: "expire_agreement",
-    args: [String(agreementId)],
+    args: [String(agreementId), String(now)],
     value: BigInt(0),
   })) as string;
 }
