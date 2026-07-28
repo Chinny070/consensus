@@ -377,7 +377,7 @@ class ConsensusContract(gl.Contract):
         agreement_id = str(int(self.next_agreement_id))
         self.next_agreement_id = u256(int(self.next_agreement_id) + 1)
 
-        now = str(gl.message.raw["datetime"])
+        now = str(gl.message_raw["datetime"])
 
         agreement_data = {
             "id": agreement_id,
@@ -507,7 +507,7 @@ class ConsensusContract(gl.Contract):
         _require_len(summary, MAX_SUBMISSION_SUMMARY_LEN, "summary")
         _require_len(evidence_manifest, MAX_EVIDENCE_MANIFEST_LEN, "evidence_manifest")
 
-        now = str(gl.message.raw["datetime"])
+        now = str(gl.message_raw["datetime"])
 
         submission_id = str(int(self.next_submission_id))
         self.next_submission_id = u256(int(self.next_submission_id) + 1)
@@ -673,7 +673,7 @@ class ConsensusContract(gl.Contract):
             parsed["criteria"], criteria_list, threshold_bps
         )
 
-        now = str(gl.message.raw["datetime"])
+        now = str(gl.message_raw["datetime"])
 
         verdict_id = str(int(self.next_verdict_id))
         self.next_verdict_id = u256(int(self.next_verdict_id) + 1)
